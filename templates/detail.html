@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if flight %}{{ flight.flight_number }} · {{ flight.departure_date }}{% else %}Not Found{% endif %} — SkySearch</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0a0a0f;
+            --paper: #f5f2ec;
+            --accent: #e8420a;
+            --gold: #c8a84b;
+            --muted: #8a8070;
+            --surface: #edeae2;
+            --border: #d4cfc5;
+            --white: #fdfcfa;
+            --green: #2d7a3a;
+            --green-bg: #eaf4ec;
+            --red-bg: #fdecea;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'DM Mono', monospace;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem 3rem;
+            border-bottom: 1.5px solid var(--ink);
+            background: var(--white);
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: -0.02em;
+            text-decoration: none;
+            color: inherit;
+        }
+        .logo span { color: var(--accent); }
+
+        .back-btn {
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            text-decoration: none;
+            border: 1px solid var(--border);
+            padding: 0.45rem 1rem;
+            border-radius: 2px;
+            transition: all 0.15s;
+        }
+        .back-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem;
+        }
+
+        .breadcrumb {
+            font-size: 0.65rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 2rem;
+        }
+
+        /* ── FLIGHT HERO CARD ── */
+        .flight-hero {
+            background: var(--ink);
+            color: var(--paper);
+            border-radius: 2px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .flight-hero::after {
+            content: '✈';
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 7rem;
+            opacity: 0.06;
+        }
+
+        .fn-display {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 2.5rem;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        .airline-name {
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0.6;
+            margin-bottom: 2rem;
+        }
+
+        .route-display {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .airport-block { }
+        .airport-block .code-big {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 2.8rem;
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+        .airport-block .city-name {
+            font-size: 0.72rem;
+            opacity: 0.55;
+            letter-spacing: 0.06em;
+            margin-top: 0.3rem;
+        }
+        .airport-block .airport-full {
+            font-size: 0.65rem;
+            opacity: 0.4;
+            margin-top: 0.15rem;
+        }
+
+        .flight-arrow {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .flight-arrow .line {
+            width: 100%;
+            height: 1px;
+            background: rgba(255,255,255,0.2);
+            position: relative;
+        }
+        .flight-arrow .line::after {
+            content: '▶';
+            position: absolute;
+            right: 0;
+            top: -0.45rem;
+            font-size: 0.5rem;
+            opacity: 0.4;
+        }
+        .flight-arrow .duration {
+            font-size: 0.7rem;
+            opacity: 0.5;
+            letter-spacing: 0.08em;
+        }
+
+        .meta-row {
+            display: flex;
+            gap: 2.5rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .meta-item { }
+        .meta-item .mi-label {
+            font-size: 0.6rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            opacity: 0.45;
+            margin-bottom: 0.3rem;
+        }
+        .meta-item .mi-value {
+            font-size: 0.95rem;
+            letter-spacing: 0.04em;
+        }
+
+        /* ── SEATS SECTION ── */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: var(--white);
+            border: 1.5px solid var(--ink);
+            border-radius: 2px;
+            padding: 1.75rem;
+            box-shadow: 3px 3px 0 var(--ink);
+            position: relative;
+        }
+
+        .info-card .card-label {
+            font-size: 0.6rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .info-card .big-num {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 3.5rem;
+            letter-spacing: -0.04em;
+            line-height: 1;
+        }
+
+        .info-card .big-num.available { color: var(--green); }
+        .info-card .big-num.full { color: var(--accent); }
+
+        .info-card .sub-num {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 0.4rem;
+        }
+
+        /* ── SEAT MAP ── */
+        .seat-map-section {
+            background: var(--white);
+            border: 1.5px solid var(--ink);
+            border-radius: 2px;
+            padding: 1.75rem;
+            box-shadow: 3px 3px 0 var(--ink);
+            margin-bottom: 2rem;
+        }
+
+        .seat-map-section h3 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .seat-legend {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+        .legend-dot {
+            width: 12px; height: 12px;
+            border-radius: 2px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.3rem;
+        }
+        .legend-dot.taken { background: var(--ink); }
+        .legend-dot.free { background: var(--surface); border: 1px solid var(--border); }
+
+        .seat-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .seat {
+            width: 28px; height: 28px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.52rem;
+            font-weight: 400;
+        }
+
+        .seat.taken {
+            background: var(--ink);
+            color: var(--paper);
+            title: attr(data-passenger);
+        }
+
+        .seat.free {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--muted);
+        }
+
+        /* ── BOOKINGS TABLE ── */
+        .bookings-section {
+            background: var(--white);
+            border: 1.5px solid var(--ink);
+            border-radius: 2px;
+            box-shadow: 3px 3px 0 var(--ink);
+            overflow: hidden;
+        }
+
+        .bookings-section h3 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 1.25rem 1.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .bookings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .bookings-table th {
+            padding: 0.6rem 1.75rem;
+            font-size: 0.6rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .bookings-table td {
+            padding: 0.8rem 1.75rem;
+            font-size: 0.83rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .bookings-table tr:last-child td { border-bottom: none; }
+
+        .seat-num {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+        }
+
+        .no-bookings {
+            padding: 2rem 1.75rem;
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        /* ── PROGRESS BAR ── */
+        .capacity-bar-wrap {
+            margin-top: 1.25rem;
+        }
+        .capacity-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            color: var(--muted);
+            margin-bottom: 0.4rem;
+        }
+        .capacity-bar {
+            height: 6px;
+            background: var(--surface);
+            border-radius: 2px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .capacity-fill {
+            height: 100%;
+            background: var(--ink);
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+        .capacity-fill.almost-full { background: var(--accent); }
+
+        .runway {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 3px;
+            background: repeating-linear-gradient(90deg,
+                var(--ink) 0px, var(--ink) 20px,
+                transparent 20px, transparent 30px);
+            opacity: 0.15;
+        }
+
+        @media (max-width: 768px) {
+            main { padding: 2rem 1.5rem; }
+            header { padding: 1rem 1.5rem; }
+            .two-col { grid-template-columns: 1fr; }
+            .fn-display { font-size: 1.8rem; }
+            .airport-block .code-big { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="/" class="logo">✈ Sky<span>Search</span></a>
+    <a href="/" class="back-btn">← Back to Search</a>
+</header>
+
+<main>
+{% if error %}
+    <div style="text-align:center; padding: 4rem; color: var(--muted);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">✈</div>
+        <p>{{ error }}</p>
+        <a href="/" style="display:inline-block; margin-top:1rem; color: var(--accent);">Back to search</a>
+    </div>
+{% else %}
+
+    <div class="breadcrumb">// flight detail &nbsp;/&nbsp; {{ flight.flight_number }} &nbsp;/&nbsp; {{ flight.departure_date }}</div>
+
+    <!-- HERO -->
+    <div class="flight-hero">
+        <div class="fn-display">{{ flight.flight_number }}</div>
+        <div class="airline-name">{{ flight.airline_name }}</div>
+
+        <div class="route-display">
+            <div class="airport-block">
+                <div class="code-big">{{ flight.origin_code }}</div>
+                <div class="city-name">{{ flight.origin_city }}</div>
+                <div class="airport-full">{{ flight.origin_name }}</div>
+            </div>
+            <div class="flight-arrow">
+                <div class="duration">{{ duration_str }}</div>
+                <div class="line"></div>
+            </div>
+            <div class="airport-block">
+                <div class="code-big">{{ flight.dest_code }}</div>
+                <div class="city-name">{{ flight.dest_city }}</div>
+                <div class="airport-full">{{ flight.dest_name }}</div>
+            </div>
+        </div>
+
+        <div class="meta-row">
+            <div class="meta-item">
+                <div class="mi-label">Departure Date</div>
+                <div class="mi-value">{{ flight.departure_date }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="mi-label">Departure Time</div>
+                <div class="mi-value">{{ flight.departure_time }} GMT</div>
+            </div>
+            <div class="meta-item">
+                <div class="mi-label">Aircraft</div>
+                <div class="mi-value">{{ flight.plane_type }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="mi-label">Duration</div>
+                <div class="mi-value">{{ duration_str }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEAT NUMBERS -->
+    {% set booked = flight.capacity - available_seats %}
+    {% set pct = (booked / flight.capacity * 100)|int %}
+
+    <div class="two-col">
+        <div class="info-card">
+            <div class="card-label">Available Seats</div>
+            <div class="big-num {% if available_seats == 0 %}full{% else %}available{% endif %}">{{ available_seats }}</div>
+            <div class="sub-num">out of {{ flight.capacity }} total</div>
+            <div class="capacity-bar-wrap">
+                <div class="capacity-bar-label">
+                    <span>{{ booked }} booked</span>
+                    <span>{{ pct }}% full</span>
+                </div>
+                <div class="capacity-bar">
+                    <div class="capacity-fill {% if pct >= 80 %}almost-full{% endif %}" style="width: {{ pct }}%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="info-card">
+            <div class="card-label">Aircraft Capacity</div>
+            <div class="big-num">{{ flight.capacity }}</div>
+            <div class="sub-num">{{ flight.plane_type }}</div>
+        </div>
+    </div>
+
+    <!-- SEAT MAP -->
+    <div class="seat-map-section">
+        <h3>Seat Map</h3>
+        <div class="seat-legend">
+            <span><span class="legend-dot taken"></span>Booked</span>
+            <span><span class="legend-dot free"></span>Available</span>
+        </div>
+        {% set booked_seats = bookings | map(attribute='seat_number') | list %}
+        <div class="seat-grid">
+        {% for i in range(1, flight.capacity + 1) %}
+            {% if i in booked_seats %}
+                {% for b in bookings %}{% if b.seat_number == i %}
+                <div class="seat taken" title="{{ b.passenger_name }} — Seat {{ i }}">{{ i }}</div>
+                {% endif %}{% endfor %}
+            {% else %}
+                <div class="seat free">{{ i }}</div>
+            {% endif %}
+        {% endfor %}
+        </div>
+    </div>
+
+    <!-- PASSENGER TABLE -->
+    <div class="bookings-section">
+        <h3>Booked Passengers ({{ bookings|length }})</h3>
+        {% if bookings %}
+        <table class="bookings-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Passenger Name</th>
+                    <th>Seat Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bookings %}
+                <tr>
+                    <td style="color: var(--muted); font-size: 0.72rem;">{{ loop.index }}</td>
+                    <td>{{ b.passenger_name }}</td>
+                    <td><span class="seat-num">{{ b.seat_number }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-bookings">No passengers booked on this flight.</div>
+        {% endif %}
+    </div>
+
+{% endif %}
+</main>
+
+<div class="runway"></div>
+</body>
+</html>

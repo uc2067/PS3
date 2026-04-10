@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkySearch — Flight Finder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0a0a0f;
+            --paper: #f5f2ec;
+            --accent: #e8420a;
+            --gold: #c8a84b;
+            --muted: #8a8070;
+            --surface: #edeae2;
+            --border: #d4cfc5;
+            --white: #fdfcfa;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'DM Mono', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── HEADER ── */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem 3rem;
+            border-bottom: 1.5px solid var(--ink);
+            background: var(--white);
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .logo span { color: var(--accent); }
+
+        .tagline {
+            font-size: 0.7rem;
+            color: var(--muted);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        /* ── HERO ── */
+        .hero {
+            padding: 5rem 3rem 3rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .hero-label {
+            font-size: 0.65rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2.8rem, 6vw, 5.5rem);
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 em {
+            font-style: normal;
+            color: var(--accent);
+        }
+
+        .hero-sub {
+            font-size: 0.85rem;
+            color: var(--muted);
+            max-width: 380px;
+            line-height: 1.7;
+        }
+
+        /* ── SEARCH FORM ── */
+        .search-card {
+            background: var(--white);
+            border: 1.5px solid var(--ink);
+            border-radius: 2px;
+            padding: 2.5rem;
+            max-width: 1100px;
+            margin: 0 auto 3rem;
+            box-shadow: 4px 4px 0 var(--ink);
+            position: relative;
+        }
+
+        .search-card::before {
+            content: 'FLIGHT SEARCH';
+            position: absolute;
+            top: -0.7rem;
+            left: 1.5rem;
+            background: var(--accent);
+            color: white;
+            font-size: 0.6rem;
+            letter-spacing: 0.15em;
+            padding: 0.2rem 0.7rem;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        label {
+            font-size: 0.62rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 400;
+        }
+
+        select, input[type="date"] {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 2px;
+            padding: 0.75rem 1rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.88rem;
+            color: var(--ink);
+            appearance: none;
+            cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        select:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: var(--ink);
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+
+        .select-wrap {
+            position: relative;
+        }
+
+        .select-wrap::after {
+            content: '▼';
+            position: absolute;
+            right: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.5rem;
+            color: var(--muted);
+            pointer-events: none;
+        }
+
+        .btn-search {
+            background: var(--ink);
+            color: var(--paper);
+            border: 1.5px solid var(--ink);
+            border-radius: 2px;
+            padding: 0.75rem 2rem;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, transform 0.1s;
+            white-space: nowrap;
+        }
+
+        .btn-search:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: translate(-1px, -1px);
+        }
+        .btn-search:active { transform: translate(1px, 1px); }
+
+        /* ── RESULTS ── */
+        #results-section { max-width: 1100px; margin: 0 auto 4rem; padding: 0 3rem; }
+
+        .results-header {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .results-count {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .results-meta {
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+
+        /* ── FLIGHT ROWS ── */
+        .flight-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .flight-table thead tr {
+            background: var(--ink);
+            color: var(--paper);
+        }
+
+        .flight-table th {
+            padding: 0.65rem 1rem;
+            font-size: 0.62rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .flight-table tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.12s;
+            cursor: pointer;
+        }
+
+        .flight-table tbody tr:hover {
+            background: var(--surface);
+        }
+
+        .flight-table td {
+            padding: 0.9rem 1rem;
+            font-size: 0.83rem;
+            vertical-align: middle;
+        }
+
+        .fn-badge {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.02em;
+        }
+
+        .route-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .code {
+            font-weight: 400;
+            font-size: 0.85rem;
+        }
+
+        .arrow {
+            color: var(--muted);
+            font-size: 0.75rem;
+        }
+
+        .city-small {
+            font-size: 0.68rem;
+            color: var(--muted);
+            margin-top: 0.1rem;
+        }
+
+        .time-cell {
+            font-size: 1rem;
+            letter-spacing: 0.04em;
+        }
+
+        .click-hint {
+            font-size: 0.68rem;
+            color: var(--muted);
+            letter-spacing: 0.06em;
+            text-align: right;
+        }
+
+        .airline-pill {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            font-size: 0.7rem;
+            letter-spacing: 0.04em;
+        }
+
+        /* ── EMPTY / LOADING ── */
+        .state-msg {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: var(--muted);
+        }
+        .state-msg .big { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .state-msg p { font-size: 0.8rem; }
+
+        /* ── LOADING SPINNER ── */
+        .spinner {
+            display: inline-block;
+            width: 18px; height: 18px;
+            border: 2px solid var(--border);
+            border-top-color: var(--ink);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── RUNWAY DECORATION ── */
+        .runway {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 3px;
+            background: repeating-linear-gradient(90deg,
+                var(--ink) 0px, var(--ink) 20px,
+                transparent 20px, transparent 30px);
+            opacity: 0.15;
+        }
+
+        @media (max-width: 768px) {
+            header { padding: 1rem 1.5rem; }
+            .hero { padding: 3rem 1.5rem 2rem; }
+            .search-card { margin: 0 1.5rem 2rem; padding: 2rem 1.5rem; }
+            #results-section { padding: 0 1.5rem; }
+            .form-grid { grid-template-columns: 1fr 1fr; }
+            .btn-search { grid-column: 1/-1; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">✈ Sky<span>Search</span></div>
+    <div class="tagline">Flight Availability System</div>
+</header>
+
+<section class="hero">
+    <div class="hero-label">// airline database interface</div>
+    <h1>Find your<br><em>next flight</em></h1>
+    <p class="hero-sub">Search available flights by route and date range. Click any result for seat availability.</p>
+</section>
+
+<section style="padding: 0 3rem;">
+    <div class="search-card">
+        <div class="form-grid">
+            <div class="field">
+                <label>Origin Airport</label>
+                <div class="select-wrap">
+                    <select id="origin" required>
+                        <option value="">Select origin…</option>
+                        {% for a in airports %}
+                        <option value="{{ a.airport_code }}">{{ a.airport_code }} — {{ a.city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="field">
+                <label>Destination Airport</label>
+                <div class="select-wrap">
+                    <select id="dest" required>
+                        <option value="">Select destination…</option>
+                        {% for a in airports %}
+                        <option value="{{ a.airport_code }}">{{ a.airport_code }} — {{ a.city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="field">
+                <label>From Date</label>
+                <input type="date" id="date_from" required>
+            </div>
+            <div class="field">
+                <label>To Date</label>
+                <input type="date" id="date_to" required>
+            </div>
+            <button class="btn-search" onclick="searchFlights()">Search →</button>
+        </div>
+    </div>
+</section>
+
+<section id="results-section">
+    <div id="results-container">
+        <div class="state-msg">
+            <div class="big">✈</div>
+            <p>Enter a route and date range above to search for flights.</p>
+        </div>
+    </div>
+</section>
+
+<div class="runway"></div>
+
+<script>
+    // Set default dates
+    const today = new Date().toISOString().split('T')[0];
+    const nextWeek = new Date(Date.now() + 7*86400000).toISOString().split('T')[0];
+    document.getElementById('date_from').value = today;
+    document.getElementById('date_to').value = nextWeek;
+
+    async function searchFlights() {
+        const origin = document.getElementById('origin').value;
+        const dest = document.getElementById('dest').value;
+        const date_from = document.getElementById('date_from').value;
+        const date_to = document.getElementById('date_to').value;
+
+        if (!origin || !dest) return alert('Please select both origin and destination airports.');
+        if (!date_from || !date_to) return alert('Please select a date range.');
+        if (origin === dest) return alert('Origin and destination cannot be the same.');
+        if (date_from > date_to) return alert('From date must be before or equal to To date.');
+
+        const container = document.getElementById('results-container');
+        container.innerHTML = `<div class="state-msg"><span class="spinner"></span>Searching flights…</div>`;
+
+        try {
+            const resp = await fetch(`/search?origin=${origin}&dest=${dest}&date_from=${date_from}&date_to=${date_to}`);
+            const data = await resp.json();
+
+            if (data.error) { container.innerHTML = `<div class="state-msg"><p>Error: ${data.error}</p></div>`; return; }
+
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="state-msg">
+                        <div class="big">🔍</div>
+                        <p>No flights found from <strong>${origin}</strong> to <strong>${dest}</strong> in that date range.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = `
+                <div class="results-header">
+                    <div class="results-count">${data.length} flight${data.length !== 1 ? 's' : ''} found</div>
+                    <div class="results-meta">${origin} → ${dest} &nbsp;·&nbsp; ${date_from} to ${date_to}</div>
+                </div>
+                <table class="flight-table">
+                    <thead>
+                        <tr>
+                            <th>Flight</th>
+                            <th>Airline</th>
+                            <th>Route</th>
+                            <th>Date</th>
+                            <th>Departure</th>
+                            <th>Duration</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            data.forEach(f => {
+                html += `
+                    <tr onclick="window.location='/flight/${f.flight_number}/${f.departure_date}'" title="Click for seat availability">
+                        <td><span class="fn-badge">${f.flight_number}</span></td>
+                        <td><span class="airline-pill">${f.airline_name}</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div>
+                                    <div class="code">${f.origin_code}</div>
+                                    <div class="city-small">${f.origin_city}</div>
+                                </div>
+                                <span class="arrow">→</span>
+                                <div>
+                                    <div class="code">${f.dest_code}</div>
+                                    <div class="city-small">${f.dest_city}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${f.departure_date}</td>
+                        <td class="time-cell">${f.departure_time}</td>
+                        <td>${f.duration}</td>
+                        <td class="click-hint">VIEW SEATS →</td>
+                    </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+
+        } catch(e) {
+            container.innerHTML = `<div class="state-msg"><p>Network error. Please try again.</p></div>`;
+        }
+    }
+</script>
+</body>
+</html>
